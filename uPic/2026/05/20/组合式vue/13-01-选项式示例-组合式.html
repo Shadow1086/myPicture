@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组合式示例</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    * { padding: 0; box-sizing: border-box; font-size: 14px; }
+    #app { display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .question {
+      margin-top: 50px; width: 500px;
+      background-color: rgb(240,240,240); border-radius: 10px;
+      padding: 20px; color: rgb(81,81,82); font-size: 16px;
+    }
+    .title { color: black; font-weight: 600; font-size: 18px; height: 30px; line-height: 30px; }
+    .list { margin-top: 10px; padding: 10px 5px; font-size: 16px; border: 1px rgb(46,46,46) solid; border-radius: 10px; }
+    .bgc { border: 1px rgb(250,109,0) solid; color: aliceblue; background-color: rgb(240,125,38); }
+    .answer { color: brown; font-size: 16px; margin-left: 20px; }
+    .select { font-size: 18px; color: rgb(243,25,25); }
+    button {
+      margin-top: 15px; margin-right: 10px; outline: none;
+      background-color: rgb(255,153,98); border: 0;
+      padding: 10px; color: rgb(61,61,61); border-radius: 5px;
+    }
+    button:active { background-color: rgba(248,161,121,0.664); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div v-for="(item, index) in question" :key="index" v-show="index == idx" class="question">
+      <div class="title">
+        <span class="select">{{ item.ismultiple ? '多选' : '单选' }}</span>
+        题目：{{ item.name }}
+        <span class="answer" v-show="answerShow">答案：{{ item.answer }}</span>
+        <span style="float:right;">{{ idx + 1 }}/{{ question.length }}</span>
+      </div>
+      <div>
+        <div
+          v-for="val in item.option" :key="val.id"
+          class="list" :class="val.checked ? 'bgc' : ''"
+          @click="handleClick(val)"
+        >{{ val.letter }}. {{ val.name }}</div>
+      </div>
+    </div>
+    <div>
+      <button @click="back" :disabled="idx == 0" :style="idx == 0 ? 'background-color:#ccc' : ''">上一题</button>
+      <button @click="next" :disabled="idx == question.length - 1" :style="idx == question.length - 1 ? 'background-color:#ccc' : ''">下一题</button>
+      <button @click="submit" style="background-color:rgb(250,142,0);color:aliceblue;">提交</button>
+      <button v-show="isshow" @click="answerShow = true" style="background-color:rgb(238,190,79);color:#fff;">查看答案</button>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue
+
+    createApp({
+      setup() {
+        const idx = ref(0)
+        const allScore = ref(0)
+        const isshow = ref(false)
+        const answerShow = ref(false)
+
+        const question = ref([
+          {
+            id: 1, ismultiple: false, name: '今天星期几?', answer: 'A', score: 2,
+            option: [
+              { id: 1, name: '星期一', checked: false, letter: 'A' },
+              { id: 2, name: '星期三', checked: false, letter: 'B' },
+              { id: 3, name: '星期四', checked: false, letter: 'C' },
+            ]
+          },
+          {
+            id: 2, ismultiple: false, name: '你喜欢吃什么?', answer: 'C', score: 2,
+            option: [
+              { id: 1, name: '香蕉', checked: false, letter: 'A' },
+              { id: 2, name: '苹果', checked: false, letter: 'B' },
+              { id: 3, name: '橘子', checked: false, letter: 'C' },
+            ]
+          },
+          {
+            id: 3, ismultiple: false, name: '你的梦想是什么?', answer: 'B', score: 2,
+            option: [
+              { id: 1, name: '当一名程序员', checked: false, letter: 'A' },
+              { id: 2, name: '当一名测试员', checked: false, letter: 'B' },
+              { id: 3, name: '当一名运维', checked: false, letter: 'C' },
+            ]
+          },
+          {
+            id: 4, ismultiple: true, name: '这是一题多选吗?', answer: 'BC', score: 2,
+            option: [
+              { id: 1, name: '不是', checked: false, letter: 'A' },
+              { id: 2, name: '是的', checked: false, letter: 'B' },
+              { id: 3, name: '是的', checked: false, letter: 'C' },
+            ]
+          },
+          {
+            id: 5, ismultiple: true, name: '是多选吧?', answer: 'ABC', score: 2,
+            option: [
+              { id: 1, name: '是的', checked: false, letter: 'A' },
+              { id: 2, name: '是的', checked: false, letter: 'B' },
+              { id: 3, name: '是的', checked: false, letter: 'C' },
+            ]
+          },
+        ])
+
+        function next() { idx.value++ }
+        function back() { idx.value-- }
+
+        function handleClick(info) {
+          const q = question.value[idx.value]
+          const options = q.option
+
+          options.forEach(item => {
+            if (item.id == info.id) {
+              item.checked = !item.checked
+            } else if (!q.ismultiple) {
+              item.checked = false
+            }
+          })
+
+          let selected = info.letter
+          if (q.ismultiple) {
+            selected = options.filter(i => i.checked).map(i => i.letter).join('')
+          }
+
+          q.isOk = selected == q.answer
+        }
+
+        function submit() {
+          allScore.value = 0
+          const unanswered = question.value.some(item => !item.option.some(v => v.checked))
+          if (unanswered) { alert('还有题目没做呢'); return }
+
+          question.value.forEach(item => {
+            if (item.isOk) allScore.value += item.score
+          })
+
+          setTimeout(() => {
+            alert('获得分数：' + allScore.value)
+            isshow.value = true
+          }, 100)
+        }
+
+        return { idx, isshow, answerShow, question, next, back, handleClick, submit }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
