@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>组合式 Vue 示例</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f3f5f7;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d6dbe1;
+      --accent: #1f8a70;
+      --accent-dark: #156c58;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 18px;
+      background:
+        radial-gradient(circle at top left, rgba(31, 138, 112, 0.08), transparent 34%),
+        linear-gradient(180deg, #f8fafb 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    }
+
+    .app {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+    }
+
+    .navigation {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .navigation a {
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: 700;
+      padding: 8px 0;
+    }
+
+    .navigation a.router-link-exact-active,
+    .navigation a.active {
+      color: var(--accent-dark);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .divider {
+      color: #c2c8d0;
+    }
+
+    .separator {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 0 0 22px;
+    }
+
+    .view-card {
+      padding: 20px 22px 22px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfcfd;
+    }
+
+    h3 {
+      margin: 0 0 16px;
+      font-size: 22px;
+    }
+
+    ol {
+      margin: 0;
+      padding-left: 22px;
+      line-height: 1.9;
+      font-size: 16px;
+    }
+
+    .book-info fieldset {
+      margin: 0;
+      padding: 18px 18px 16px;
+      border: 1px solid #b9c1ca;
+      border-radius: 8px;
+    }
+
+    .book-info legend {
+      padding: 0 10px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .book-info label {
+      display: inline-block;
+      min-width: 88px;
+      margin-top: 8px;
+    }
+
+    .book-info input[type="text"],
+    .book-info input[type="number"] {
+      width: min(360px, 100%);
+      height: 38px;
+      padding: 6px 10px;
+      margin: 8px 0 0;
+      border: 1px solid #b8c0ca;
+      border-radius: 6px;
+      outline: none;
+      font-size: 15px;
+      background: #fff;
+    }
+
+    .book-info input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(31, 138, 112, 0.12);
+    }
+
+    .book-info .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 14px 0 12px;
+    }
+
+    .book-info input[type="submit"],
+    .book-info input[type="button"] {
+      height: 38px;
+      padding: 0 16px;
+      border: 1px solid #9aa4af;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .book-info input[type="submit"] {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .book-info input[type="submit"]:hover {
+      background: var(--accent-dark);
+    }
+
+    .book-info input[type="button"]:hover {
+      background: #eef2f6;
+    }
+
+    .preview {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--text);
+      line-height: 1.8;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px 12px;
+      }
+
+      .app {
+        padding: 16px;
+      }
+
+      .view-card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="app">
+    <nav class="navigation">
+      <a href="#/" :class="{ active: view === 'list' }" @click.prevent="view = 'list'">教材列表</a>
+      <span class="divider">|</span>
+      <a href="#/info" :class="{ active: view === 'info' }" @click.prevent="view = 'info'">图书信息录入</a>
+    </nav>
+
+    <hr class="separator" />
+
+    <section class="view-card" v-if="view === 'list'">
+      <h3>教材列表</h3>
+      <ol>
+        <li v-for="(book, index) in books" :key="index">{{ book.bookName }}</li>
+      </ol>
+    </section>
+
+    <section class="view-card book-info" v-else>
+      <fieldset>
+        <legend>图书信息</legend>
+
+        <div>
+          <label for="bookName">图书名称：</label>
+          <input id="bookName" type="text" v-model="bookName" placeholder="输入图书名称">
+        </div>
+
+        <div>
+          <label for="press">出版社：</label>
+          <input id="press" type="text" v-model="press" placeholder="输入出版社">
+        </div>
+
+        <div>
+          <label for="price">定价：</label>
+          <input id="price" type="number" v-model.number="price" placeholder="输入定价">
+        </div>
+
+        <div class="btn-row">
+          <input type="submit" value="提交" @click="submitForm">
+          <input type="button" value="重置" @click="resetForm">
+        </div>
+
+        <p class="preview">图书名称：{{ bookName }}、出版社：{{ press }}、定价：{{ price }}</p>
+      </fieldset>
+    </section>
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+      setup() {
+        const view = ref('list');
+        const books = ref([
+          { bookName: 'Web前端开发技术' },
+          { bookName: 'JSP程序设计' },
+          { bookName: '计算机网络' }
+        ]);
+
+        const bookName = ref('Vue.js前端框架技术与实战');
+        const press = ref('');
+        const price = ref(0);
+
+        const submitForm = () => {
+          alert(`已提交：${bookName.value} | ${press.value} | ${price.value}`);
+        };
+
+        const resetForm = () => {
+          bookName.value = '';
+          press.value = '';
+          price.value = 0;
+        };
+
+        return {
+          view,
+          books,
+          bookName,
+          press,
+          price,
+          submitForm,
+          resetForm
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>
